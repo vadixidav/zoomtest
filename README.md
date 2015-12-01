@@ -1,3 +1,3 @@
 # zoomtest
-A particle physics test for my Rust library [zoom](https://github.com/vadixidav/zoom)
+A particle physics example for my Rust library [zoom](https://github.com/vadixidav/zoom)
 
