@@ -73,7 +73,7 @@ impl GravityPhysics for Ball {
         1.0
     }
     fn inertia(&self) -> f64 {
-        1000000.0
+        100000.0
     }
 }
 
@@ -82,7 +82,7 @@ impl LorentzPhysics for Ball {
         50.0
     }
     fn inertia(&self) -> f64 {
-        1000000.0
+        100000.0
     }
 }
 
@@ -113,7 +113,7 @@ fn main() {
         ball: Ball,
     }
     let mut rng = rand::Isaac64Rng::from_seed(&[1, 2, 3, 4]);
-    let mut sballs = (0..200).map(|_| SphereBall{
+    let mut sballs = (0..500).map(|_| SphereBall{
         scene_node: window.add_sphere(0.2),
         ball: Ball::new(Vec3::new(rng.next_f64() - 0.5, rng.next_f64() - 0.5, rng.next_f64() - 0.5) * 10.0, Vec3::zero())
     }).map(|mut sball| {sball.scene_node.set_color(0.0, 0.0, 1.0); sball}).collect::<Vec<_>>();
@@ -124,9 +124,9 @@ fn main() {
         for i in 0..sballs.len() {
             for j in (i+1)..sballs.len() {
                 unsafe {
-                    GravityPhysics::gravitate_radius_squared(&mut (*sballs.as_mut_ptr().offset(i as isize)).ball,
+                    GravityPhysics::gravitate_radius_squared::<GravityPhysics>(&mut (*sballs.as_mut_ptr().offset(i as isize)).ball,
                         &mut (*sballs.as_mut_ptr().offset(j as isize)).ball, 0.5);
-                    LorentzPhysics::lorentz_radius_squared(&mut (*sballs.as_mut_ptr().offset(i as isize)).ball,
+                    LorentzPhysics::lorentz_radius_squared::<LorentzPhysics>(&mut (*sballs.as_mut_ptr().offset(i as isize)).ball,
                         &mut (*sballs.as_mut_ptr().offset(j as isize)).ball, 0.5);
                 }
             }
