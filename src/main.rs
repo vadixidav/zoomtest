@@ -124,10 +124,10 @@ fn main() {
         for i in 0..sballs.len() {
             for j in (i+1)..sballs.len() {
                 unsafe {
-                    GravityPhysics::gravitate(&mut (*sballs.as_mut_ptr().offset(i as isize)).ball,
-                        &mut (*sballs.as_mut_ptr().offset(j as isize)).ball);
-                    LorentzPhysics::lorentz(&mut (*sballs.as_mut_ptr().offset(i as isize)).ball,
-                        &mut (*sballs.as_mut_ptr().offset(j as isize)).ball);
+                    GravityPhysics::gravitate_radius_squared(&mut (*sballs.as_mut_ptr().offset(i as isize)).ball,
+                        &mut (*sballs.as_mut_ptr().offset(j as isize)).ball, 0.5);
+                    LorentzPhysics::lorentz_radius_squared(&mut (*sballs.as_mut_ptr().offset(i as isize)).ball,
+                        &mut (*sballs.as_mut_ptr().offset(j as isize)).ball, 0.5);
                 }
             }
         }
