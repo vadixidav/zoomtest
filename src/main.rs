@@ -72,11 +72,13 @@ impl Ball {
     }
 }
 
-impl Particle<Vec3, f64> for Ball {
+impl Position<Vec3, f64> for Ball {
     fn position(&self) -> Vec3 {
         self.position
     }
+}
 
+impl Particle<Vec3, f64> for Ball {
     fn velocity(&self) -> Vec3 {
         self.velocity
     }
@@ -100,7 +102,7 @@ impl Inertia<f64> for Ball {
 
 impl GravityPhysics for Ball {
     fn quanta(&self) -> f64 {
-        40.0
+        10.0
     }
 }
 
