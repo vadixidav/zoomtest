@@ -11,6 +11,8 @@ use kiss3d::scene::SceneNode;
 use zoom::*;
 use num::Zero;
 use na::Vec3 as NaVec;
+use std::thread;
+use std::sync::Mutex;
 
 type Vec3 = Cartesian3<f64>;
 
@@ -124,8 +126,8 @@ fn main() {
         scene_node: SceneNode,
         ball: Ball,
     }
-    let mut rng = rand::Isaac64Rng::from_seed(&[1, 2, 3, 4]);
-    let mut sballs = (0..50).map(|_| SphereBall{
+    let mut rng = rand::Isaac64Rng::from_seed(&[1, 3, 3, 4]);
+    let mut sballs = (0..200).map(|_| SphereBall{
         scene_node: window.add_sphere(0.2)/*window.add_cube(0.2, 0.2, 0.2)*/,
         ball: Ball::new(Vec3::new(rng.next_f64() - 0.5, rng.next_f64() - 0.5, rng.next_f64() - 0.5) * 10.0,
             Vec3::zero(),
@@ -140,25 +142,25 @@ fn main() {
             if i == sballs.len() - 1 {
                 unsafe {
                     SpringPhysics::hooke::<SpringPhysics>(&mut (*sballs.as_mut_ptr().offset(i as isize)).ball,
-                        &mut (*sballs.as_mut_ptr()).ball, 1.0);
+                        &mut (*sballs.as_mut_ptr()).ball, 5.0);
                 }
             } else {
                 unsafe {
                     SpringPhysics::hooke::<SpringPhysics>(&mut (*sballs.as_mut_ptr().offset(i as isize)).ball,
-                        &mut (*sballs.as_mut_ptr().offset((i + 1) as isize)).ball, 1.0);
+                        &mut (*sballs.as_mut_ptr().offset((i + 1) as isize)).ball, 5.0);
                 }
             }
             for j in (i+1)..sballs.len() {
                 unsafe {
                     GravityPhysics::gravitate_radius_squared::<GravityPhysics>(&mut (*sballs.as_mut_ptr().offset(i as isize)).ball,
-                        &mut (*sballs.as_mut_ptr().offset(j as isize)).ball, 0.001, -1.0);
+                        &mut (*sballs.as_mut_ptr().offset(j as isize)).ball, 0.001, -10.0);
                     LorentzPhysics::lorentz_radius_squared::<LorentzPhysics>(&mut (*sballs.as_mut_ptr().offset(i as isize)).ball,
-                        &mut (*sballs.as_mut_ptr().offset(j as isize)).ball, 0.001, 1.0);
+                        &mut (*sballs.as_mut_ptr().offset(j as isize)).ball, 0.001, 0.8);
                 }
             }
         }
         for sball in sballs.iter_mut() {
-            GravityPhysics::drag(&mut sball.ball, 500.0);
+            GravityPhysics::drag(&mut sball.ball, 1500.0);
             sball.ball.advance(0.5);
             sball.scene_node.set_local_translation(to_navec(sball.ball.position()));
         }
