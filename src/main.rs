@@ -11,8 +11,6 @@ use kiss3d::scene::SceneNode;
 use zoom::*;
 use num::Zero;
 use na::Vec3 as NaVec;
-use std::thread;
-use std::sync::Mutex;
 
 type Vec3 = Cartesian3<f64>;
 
@@ -53,7 +51,6 @@ impl Quanta<f64> for GravityPhysics {
 impl PhysicsParticle<Vec3, f64> for GravityPhysics {}
 
 struct Ball {
-    charge: f64,
     position: Vec3,
     velocity: Vec3,
     acceleration: Vec3,
@@ -64,9 +61,8 @@ fn to_navec(v: Vec3) -> NaVec<f32> {
 }
 
 impl Ball {
-    fn new(position: Vec3, velocity: Vec3, charge: f64) -> Self {
+    fn new(position: Vec3, velocity: Vec3) -> Self {
         Ball{
-            charge: charge,
             position: position,
             velocity: velocity,
             acceleration: Vec3::zero(),
@@ -130,8 +126,7 @@ fn main() {
     let mut sballs = (0..200).map(|_| SphereBall{
         scene_node: window.add_sphere(0.2)/*window.add_cube(0.2, 0.2, 0.2)*/,
         ball: Ball::new(Vec3::new(rng.next_f64() - 0.5, rng.next_f64() - 0.5, rng.next_f64() - 0.5) * 10.0,
-            Vec3::zero(),
-            (rng.next_f64() - 0.5)*100.0)
+            Vec3::zero())
     }).map(|mut sball| {sball.scene_node.set_color(0.0, 0.0, 1.0); sball}).collect::<Vec<_>>();
 
     window.set_light(Light::StickToCamera);
