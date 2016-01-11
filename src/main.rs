@@ -157,7 +157,7 @@ fn main() {
     unsafe impl Send for SBPointer {}
     impl Copy for SBPointer {}
     let mut rng = rand::Isaac64Rng::from_seed(&[1, 3, 3, 4]);
-    let mut sballs = (0..1200).map(|_| SphereBall{
+    let mut sballs = (0..2000).map(|_| SphereBall{
         scene_node: window.add_sphere(0.2)/*window.add_cube(0.2, 0.2, 0.2)*/,
         ball: Ball::new(Vec3::new(rng.next_f64() - 0.5, rng.next_f64() - 0.5, rng.next_f64() - 0.5) * 10.0,
             Vec3::zero())
@@ -177,9 +177,11 @@ fn main() {
                 for i in (len*t/threadTotal)..(len*(t+1)/threadTotal) {
                     unsafe {
                         SpringPhysics::hooke_to::<SpringPhysics>(&mut (*sballptr.pointer.offset(i as isize)).ball,
-                            &(*sballptr.pointer.offset(((i - 1 + len) % len) as isize)).ball, 7.0);
+                            &(*sballptr.pointer.offset(((i - 1 + len) % len) as isize)).ball, 2.0);
                         SpringPhysics::hooke_to::<SpringPhysics>(&mut (*sballptr.pointer.offset(i as isize)).ball,
-                            &(*sballptr.pointer.offset(((i + 1 + len) % len) as isize)).ball, 7.0);
+                            &(*sballptr.pointer.offset(((i + 1 + len) % len) as isize)).ball, 2.0);
+                        SpringPhysics::hooke_to::<SpringPhysics>(&mut (*sballptr.pointer.offset(i as isize)).ball,
+                            &(*sballptr.pointer.offset(((i + len/7 + len) % len) as isize)).ball, 2.0);
                     }
 
                     for j in 0..len {
@@ -188,7 +190,7 @@ fn main() {
                                 GravityPhysics::gravitate_radius_to::<GravityPhysics>(&mut (*sballptr.pointer.offset(i as isize)).ball,
                                     &(*sballptr.pointer.offset(j as isize)).ball, -10.0);
                                 LorentzPhysics::lorentz_radius_to::<LorentzPhysics>(&mut (*sballptr.pointer.offset(i as isize)).ball,
-                                    &(*sballptr.pointer.offset(j as isize)).ball, 0.8);
+                                    &(*sballptr.pointer.offset(j as isize)).ball, 0.05);
                             }
                         }
                     }
@@ -200,8 +202,8 @@ fn main() {
             let _ = rx.recv();
         }
         for sball in sballs.iter_mut() {
-            GravityPhysics::drag(&mut sball.ball, 1500.0);
-            sball.ball.advance(0.05);
+            GravityPhysics::drag(&mut sball.ball, 30000.0);
+            sball.ball.advance(0.5);
             sball.scene_node.set_local_translation(to_navec(sball.ball.position()));
         }
     }
