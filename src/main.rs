@@ -70,7 +70,7 @@ impl Ball {
     }
 }
 
-impl Position<Vec3, f64> for Ball {
+impl Position<Vec3> for Ball {
     fn position(&self) -> Vec3 {
         self.position
     }
