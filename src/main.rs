@@ -76,11 +76,13 @@ impl Position<Vec3> for Ball {
     }
 }
 
-impl Particle<Vec3, f64> for Ball {
+impl Velocity<Vec3> for Ball {
     fn velocity(&self) -> Vec3 {
         self.velocity
     }
+}
 
+impl Particle<Vec3, f64> for Ball {
     fn accelerate(&mut self, vec: &Vec3) {
         self.acceleration = self.acceleration + *vec;
     }
@@ -148,15 +150,15 @@ fn main() {
             for j in (i+1)..sballs.len() {
                 unsafe {
                     GravityPhysics::gravitate_radius_squared::<GravityPhysics>(&mut (*sballs.as_mut_ptr().offset(i as isize)).ball,
-                        &mut (*sballs.as_mut_ptr().offset(j as isize)).ball, 0.001, -10.0);
+                        &mut (*sballs.as_mut_ptr().offset(j as isize)).ball, 0.001, -1.0);
                     LorentzPhysics::lorentz_radius_squared::<LorentzPhysics>(&mut (*sballs.as_mut_ptr().offset(i as isize)).ball,
-                        &mut (*sballs.as_mut_ptr().offset(j as isize)).ball, 0.001, 0.8);
+                        &mut (*sballs.as_mut_ptr().offset(j as isize)).ball, 0.001, 1.0);
                 }
             }
         }
         for sball in sballs.iter_mut() {
             GravityPhysics::drag(&mut sball.ball, 1500.0);
-            sball.ball.advance(0.5);
+            sball.ball.advance(0.05);
             sball.scene_node.set_local_translation(to_navec(sball.ball.position()));
         }
     }
