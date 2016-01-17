@@ -134,7 +134,7 @@ fn main() {
     unsafe impl Sync for SphereBall {}
     unsafe impl Send for SphereBall {}
     let mut rng = rand::Isaac64Rng::from_seed(&[1, 3, 3, 4]);
-    let mut sballs = (0..2000).map(|_| SphereBall{
+    let mut sballs = (0..1000).map(|_| SphereBall{
         scene_node: window.add_sphere(0.2)/*window.add_cube(0.2, 0.2, 0.2)*/,
         ball: Thing::new(Vec3::new(rng.next_f64() - 0.5, rng.next_f64() - 0.5, rng.next_f64() - 0.5) * 10.0,
             Vec3::zero())
@@ -164,7 +164,7 @@ fn main() {
                             if i != j {
                                 unsafe {
                                     GravityPhysics::gravitate_radius_to::<GravityPhysics>(&(*sballs.as_ptr().offset(i as isize)).ball,
-                                        &(*sballs.as_ptr().offset(j as isize)).ball, -10.0);
+                                        &(*sballs.as_ptr().offset(j as isize)).ball, -15.0);
                                     LorentzPhysics::lorentz_radius_to::<LorentzPhysics>(&(*sballs.as_ptr().offset(i as isize)).ball,
                                         &(*sballs.as_ptr().offset(j as isize)).ball, 0.05);
                                 }
