@@ -1,6 +1,6 @@
 [package]
 name = "zoomtest"
-version = "0.1.3"
+version = "1.0.0"
 authors = ["Geordon Worley <vadixidav@gmail.com>"]
 
 [dependencies]
@@ -8,5 +8,6 @@ num = "*"
 nalgebra = "*"
 rand = "*"
 itertools = "*"
+crossbeam = "*"
 kiss3d = {git = "https://github.com/Ticki/kiss3d"}
 zoom = {git = "https://github.com/vadixidav/zoom.git"}
