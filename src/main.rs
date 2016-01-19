@@ -10,7 +10,7 @@ use kiss3d::window::Window;
 use kiss3d::light::Light;
 use kiss3d::scene::SceneNode;
 use zoom::*;
-use num::Zero;
+use num::{Zero, Float};
 use na::Vec3 as NaVec;
 
 type Vec3 = Cartesian3<f64>;
@@ -138,7 +138,7 @@ fn main() {
         scene_node: window.add_sphere(0.2)/*window.add_cube(0.2, 0.2, 0.2)*/,
         ball: Thing::new(Vec3::new(rng.next_f64() - 0.5, rng.next_f64() - 0.5, rng.next_f64() - 0.5) * 10.0,
             Vec3::zero())
-    }).map(|mut sball| {sball.scene_node.set_color(0.0, 0.0, 1.0); sball}).collect::<Vec<_>>();
+    }).enumerate().map(|(i, mut sball)| {sball.scene_node.set_color((i as f32 * 0.134).sin()*0.8 + 0.2, (i as f32 * 0.17).sin()*0.8 + 0.2, (i as f32 * 0.2).sin()*0.8 + 0.2); sball}).collect::<Vec<_>>();
 
     window.set_light(Light::StickToCamera);
 
