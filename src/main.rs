@@ -151,23 +151,19 @@ fn main() {
             let handles = (0..thread_total).map(|t| {
                 scope.spawn(move || {
                     for i in (len*t/thread_total)..(len*(t+1)/thread_total) {
-                        unsafe {
-                            SpringPhysics::hooke_to::<SpringPhysics>(&(*sballs.as_ptr().offset(i as isize)).ball,
-                                &(*sballs.as_ptr().offset(((i + len - 1) % len) as isize)).ball, 2.0);
-                            SpringPhysics::hooke_to::<SpringPhysics>(&(*sballs.as_ptr().offset(i as isize)).ball,
-                                &(*sballs.as_ptr().offset(((i + 1 + len) % len) as isize)).ball, 2.0);
-                            SpringPhysics::hooke_to::<SpringPhysics>(&(*sballs.as_ptr().offset(i as isize)).ball,
-                                &(*sballs.as_ptr().offset(((i + len/7 + len) % len) as isize)).ball, 2.0);
-                        }
+                        SpringPhysics::hooke_to::<SpringPhysics>(&sballs[i].ball,
+                            &sballs[((i + len - 1) % len)].ball, 2.0);
+                        SpringPhysics::hooke_to::<SpringPhysics>(&sballs[i].ball,
+                            &sballs[((i + len + 1) % len)].ball, 2.0);
+                        SpringPhysics::hooke_to::<SpringPhysics>(&sballs[i].ball,
+                            &sballs[((i + len + len/7) % len)].ball, 2.0);
 
                         for j in 0..len {
                             if i != j {
-                                unsafe {
-                                    GravityPhysics::gravitate_radius_to::<GravityPhysics>(&(*sballs.as_ptr().offset(i as isize)).ball,
-                                        &(*sballs.as_ptr().offset(j as isize)).ball, -10.0);
-                                    LorentzPhysics::lorentz_radius_to::<LorentzPhysics>(&(*sballs.as_ptr().offset(i as isize)).ball,
-                                        &(*sballs.as_ptr().offset(j as isize)).ball, 0.05);
-                                }
+                                GravityPhysics::gravitate_radius_to::<GravityPhysics>(&sballs[i].ball,
+                                    &sballs[j].ball, -10.0);
+                                LorentzPhysics::lorentz_radius_to::<LorentzPhysics>(&sballs[i].ball,
+                                    &sballs[j].ball, 0.05);
                             }
                         }
                     }
