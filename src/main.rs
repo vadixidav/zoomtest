@@ -134,7 +134,7 @@ fn main() {
     unsafe impl Sync for SphereBall {}
     unsafe impl Send for SphereBall {}
     let mut rng = rand::Isaac64Rng::from_seed(&[1, 3, 3, 4]);
-    let mut sballs = (0..2000).map(|_| SphereBall{
+    let mut sballs = (0..1000).map(|_| SphereBall{
         scene_node: window.add_sphere(0.2)/*window.add_cube(0.2, 0.2, 0.2)*/,
         ball: Thing::new(Vec3::new(rng.next_f64() - 0.5, rng.next_f64() - 0.5, rng.next_f64() - 0.5) * 10.0,
             Vec3::zero())
