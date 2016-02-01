@@ -1,6 +1,6 @@
 [package]
 name = "zoomtest"
-version = "2.0.0"
+version = "2.0.1"
 authors = ["Geordon Worley <vadixidav@gmail.com>"]
 
 [dependencies]
@@ -11,4 +11,4 @@ itertools = "*"
 crossbeam = "*"
 zoom = "1.1.0"
 glium = "0.13.3"
-glowygraph = {git = "https://github.com/vadixidav/glowygraph.git"}
+glowygraph = "0.2.1"
