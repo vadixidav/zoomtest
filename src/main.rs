@@ -1,19 +1,19 @@
-extern crate kiss3d;
 extern crate zoom;
 extern crate num;
 extern crate nalgebra as na;
 extern crate rand;
 extern crate crossbeam;
+extern crate glowygraph as gg;
+extern crate glium;
 
 use rand::{SeedableRng, Rng};
-use kiss3d::window::Window;
-use kiss3d::light::Light;
-use kiss3d::scene::SceneNode;
 use zoom::*;
 use num::{Zero, Float};
-use na::Vec3 as NaVec;
 
-type Vec3 = Cartesian3<f64>;
+use na::{ToHomogeneous, Translation, Rotation};
+use num::traits::One;
+
+type Vec3 = na::Vec3<f64>;
 
 trait LorentzPhysics: Particle<Vec3, f64> + Inertia<f64> {
     fn quanta(&self) -> f64;
@@ -53,10 +53,6 @@ impl PhysicsParticle<Vec3, f64> for GravityPhysics {}
 
 struct Thing {
     particle: BasicParticle<Vec3, f64>,
-}
-
-fn to_navec(v: Vec3) -> NaVec<f32> {
-    NaVec::new(v.x as f32, v.y as f32, v.z as f32)
 }
 
 impl Thing {
@@ -126,25 +122,48 @@ impl SpringPhysics for Thing {
 }
 
 fn main() {
-    let mut window = Window::new("zoom test");
+    use glium::DisplayBuild;
+    let display = glium::glutin::WindowBuilder::new().build_glium().unwrap();
+    let window = display.get_window().unwrap();
+    let glowy = gg::Renderer::new(&display);
+
+    //Set mouse cursor to middle
+    {
+        let (dimx, dimy) = display.get_framebuffer_dimensions();
+        let (hdimx, hdimy) = (dimx/2, dimy/2);
+        window.set_cursor_position(hdimx as i32, hdimy as i32).ok().unwrap();
+    }
+
+    let perspective = *na::Persp3::new(1.5, 1.0, 0.0, 500.0).to_mat().as_ref();
+    let mut movement = na::Iso3::<f32>::one();
+
+    let mut upstate = glium::glutin::ElementState::Released;
+    let mut dnstate = glium::glutin::ElementState::Released;
+    let mut ltstate = glium::glutin::ElementState::Released;
+    let mut rtstate = glium::glutin::ElementState::Released;
+    let mut fdstate = glium::glutin::ElementState::Released;
+    let mut bkstate = glium::glutin::ElementState::Released;
+
     struct SphereBall {
-        scene_node: SceneNode,
+        color: [f32; 4],
         ball: Thing,
     }
     unsafe impl Sync for SphereBall {}
     unsafe impl Send for SphereBall {}
     let mut rng = rand::Isaac64Rng::from_seed(&[1, 3, 3, 4]);
-    let mut sballs = (0..1000).map(|_| SphereBall{
-        scene_node: window.add_sphere(0.2)/*window.add_cube(0.2, 0.2, 0.2)*/,
-        ball: Thing::new(Vec3::new(rng.next_f64() - 0.5, rng.next_f64() - 0.5, rng.next_f64() - 0.5) * 10.0,
-            Vec3::zero())
-    }).enumerate().map(|(i, mut sball)| {sball.scene_node.set_color((i as f32 * 0.134).sin()*0.8 + 0.2, (i as f32 * 0.17).sin()*0.8 + 0.2, (i as f32 * 0.2).sin()*0.8 + 0.2); sball}).collect::<Vec<_>>();
-
-    window.set_light(Light::StickToCamera);
+    let mut sballs = (0..1000).map(|i| SphereBall{
+        color: [
+            (i as f32 * 0.134).sin()*0.8 + 0.2,
+            (i as f32 * 0.17).sin()*0.8 + 0.2,
+            (i as f32 * 0.2).sin()*0.8 + 0.2,
+            1.0
+        ],
+        ball: Thing::new(Vec3::new(rng.next_f64() - 0.5, rng.next_f64() - 0.5, rng.next_f64() - 0.5) * 10.0, Vec3::zero()),
+    }).collect::<Vec<_>>();
 
     let thread_total = 4;
 
-    while window.render() {
+    loop {
         crossbeam::scope(|scope| {
             let len = sballs.len();
             let sballs = &sballs;
@@ -174,10 +193,69 @@ fn main() {
                 handle.join();
             }
         });
+
         for sball in sballs.iter_mut() {
             GravityPhysics::drag(&mut sball.ball, 30000.0);
             sball.ball.advance(0.5);
-            sball.scene_node.set_local_translation(to_navec(sball.ball.position()));
+        }
+
+        glowy.render_nodes(movement.to_homogeneous().as_ref(), &perspective,
+            &sballs.iter().map(|n|
+                gg::Node{position: {
+                    let Vec3{x, y, z} = n.ball.position();
+                    [x as f32, y as f32, z as f32]
+                }, color: n.color, falloff: 0.25}
+            ).collect::<Vec<_>>()[..]);
+
+        for ev in display.poll_events() {
+            match ev {
+                glium::glutin::Event::Closed => return,
+                glium::glutin::Event::KeyboardInput(state, _, Some(glium::glutin::VirtualKeyCode::W)) => {
+                    fdstate = state;
+                },
+                glium::glutin::Event::KeyboardInput(state, _, Some(glium::glutin::VirtualKeyCode::S)) => {
+                    bkstate = state;
+                },
+                glium::glutin::Event::KeyboardInput(state, _, Some(glium::glutin::VirtualKeyCode::A)) => {
+                    ltstate = state;
+                },
+                glium::glutin::Event::KeyboardInput(state, _, Some(glium::glutin::VirtualKeyCode::D)) => {
+                    rtstate = state;
+                },
+                glium::glutin::Event::KeyboardInput(state, _, Some(glium::glutin::VirtualKeyCode::Q)) => {
+                    dnstate = state;
+                },
+                glium::glutin::Event::KeyboardInput(state, _, Some(glium::glutin::VirtualKeyCode::E)) => {
+                    upstate = state;
+                },
+                glium::glutin::Event::MouseMoved((x, y)) => {
+                    let (dimx, dimy) = display.get_framebuffer_dimensions();
+                    let (hdimx, hdimy) = (dimx/2, dimy/2);
+                    movement.append_rotation_mut(&na::Vec3::new(-(y - hdimy as i32) as f32 / 128.0,
+                        (x - hdimx as i32) as f32 / 128.0, 0.0));
+                    window.set_cursor_position(hdimx as i32, hdimy as i32).ok().unwrap();
+                },
+                _ => ()
+            }
+        }
+
+        if upstate == glium::glutin::ElementState::Pressed {
+            movement.append_translation_mut(&na::Vec3::new(0.0, -0.1, 0.0));
+        }
+        if dnstate == glium::glutin::ElementState::Pressed {
+            movement.append_translation_mut(&na::Vec3::new(0.0, 0.1, 0.0));
+        }
+        if ltstate == glium::glutin::ElementState::Pressed {
+            movement.append_translation_mut(&na::Vec3::new(-0.1, 0.0, 0.0));
+        }
+        if rtstate == glium::glutin::ElementState::Pressed {
+            movement.append_translation_mut(&na::Vec3::new(0.1, 0.0, 0.0));
+        }
+        if fdstate == glium::glutin::ElementState::Pressed {
+            movement.append_translation_mut(&na::Vec3::new(0.0, 0.0, -0.1));
+        }
+        if bkstate == glium::glutin::ElementState::Pressed {
+            movement.append_translation_mut(&na::Vec3::new(0.0, 0.0, 0.1));
         }
     }
 }

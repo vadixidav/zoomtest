@@ -9,5 +9,6 @@ nalgebra = "*"
 rand = "*"
 itertools = "*"
 crossbeam = "*"
-kiss3d = {git = "https://github.com/Ticki/kiss3d"}
-zoom = {git = "https://github.com/vadixidav/zoom.git"}
+zoom = "1.1.0"
+glium = "0.13.3"
+glowygraph = {git = "https://github.com/vadixidav/glowygraph.git"}
