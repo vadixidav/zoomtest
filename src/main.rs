@@ -11,7 +11,6 @@ use zoom::*;
 use num::{Zero, Float};
 
 use na::{ToHomogeneous, Translation, Rotation};
-use num::traits::One;
 
 type Vec3 = na::Vec3<f64>;
 
@@ -122,7 +121,7 @@ impl SpringPhysics for Thing {
 }
 
 fn main() {
-    use glium::DisplayBuild;
+    use glium::{DisplayBuild, Surface};
     let display = glium::glutin::WindowBuilder::new().build_glium().unwrap();
     let window = display.get_window().unwrap();
     let glowy = gg::Renderer::new(&display);
@@ -135,7 +134,10 @@ fn main() {
     }
 
     let perspective = *na::Persp3::new(1.5, 1.0, 0.0, 500.0).to_mat().as_ref();
-    let mut movement = na::Iso3::<f32>::one();
+    let mut movement = na::Iso3::<f32>::new(
+        na::Vec3::new(0.0, 0.0, 50.0),
+        na::Vec3::new(0.0, 0.0, 0.0),
+    );
 
     let mut upstate = glium::glutin::ElementState::Released;
     let mut dnstate = glium::glutin::ElementState::Released;
@@ -151,7 +153,7 @@ fn main() {
     unsafe impl Sync for SphereBall {}
     unsafe impl Send for SphereBall {}
     let mut rng = rand::Isaac64Rng::from_seed(&[1, 3, 3, 4]);
-    let mut sballs = (0..1200).map(|i| SphereBall{
+    let mut sballs = (0..1000).map(|i| SphereBall{
         color: [
             (i as f32 * 0.134).sin()*0.8 + 0.2,
             (i as f32 * 0.17).sin()*0.8 + 0.2,
@@ -162,10 +164,11 @@ fn main() {
     }).collect::<Vec<_>>();
 
     let thread_total = 4;
+    let helix_order = 7;
+    let len = sballs.len();
 
     loop {
         crossbeam::scope(|scope| {
-            let len = sballs.len();
             let sballs = &sballs;
             let handles = (0..thread_total).map(|t| {
                 scope.spawn(move || {
@@ -175,7 +178,7 @@ fn main() {
                         SpringPhysics::hooke_to::<SpringPhysics>(&sballs[i].ball,
                             &sballs[((i + len + 1) % len)].ball, 2.0);
                         SpringPhysics::hooke_to::<SpringPhysics>(&sballs[i].ball,
-                            &sballs[((i + len + len/7) % len)].ball, 2.0);
+                            &sballs[((i + len + len/helix_order) % len)].ball, 2.0);
 
                         for j in 0..len {
                             if i != j {
@@ -199,13 +202,68 @@ fn main() {
             sball.ball.advance(0.5);
         }
 
-        glowy.render_nodes(movement.to_homogeneous().as_ref(), &perspective,
+        let mut target = display.draw();
+        target.clear_color(0.0, 0.0, 0.0, 1.0);
+
+        //Render nodes
+        glowy.render_nodes(&mut target, movement.to_homogeneous().as_ref(), &perspective,
             &sballs.iter().map(|n|
-                gg::Node{position: {
-                    let Vec3{x, y, z} = n.ball.position();
-                    [x as f32, y as f32, z as f32]
-                }, color: n.color, falloff: 0.15}
+                gg::Node{
+                    position: {
+                        let Vec3{x, y, z} = n.ball.position();
+                        [x as f32, y as f32, z as f32]
+                    },
+                    color: n.color,
+                    falloff: 0.15,
+                }
             ).collect::<Vec<_>>()[..]);
+
+        //Render edges
+        glowy.render_edges(
+            &mut target,
+            movement.to_homogeneous().as_ref(),
+            &perspective,
+            &(0..len).flat_map(|i| {
+                    std::iter::once(gg::Node{
+                        position: {
+                            let Vec3{x, y, z} = sballs[i].ball.position();
+                            [x as f32, y as f32, z as f32]
+                        },
+                        color: sballs[i].color,
+                        falloff: 0.15,
+                    }).chain(
+                        std::iter::once(gg::Node{
+                            position: {
+                                let Vec3{x, y, z} = sballs[(i + 1) % len].ball.position();
+                                [x as f32, y as f32, z as f32]
+                            },
+                            color: sballs[(i + 1) % len].color,
+                            falloff: 0.15,
+                        })
+                    ).chain(
+                        std::iter::once(gg::Node{
+                            position: {
+                                let Vec3{x, y, z} = sballs[i].ball.position();
+                                [x as f32, y as f32, z as f32]
+                            },
+                            color: sballs[i].color,
+                            falloff: 0.15,
+                        })
+                    ).chain(
+                        std::iter::once(gg::Node{
+                            position: {
+                                let Vec3{x, y, z} = sballs[(i + len/helix_order) % len].ball.position();
+                                [x as f32, y as f32, z as f32]
+                            },
+                            color: sballs[(i + len/helix_order) % len].color,
+                            falloff: 0.15,
+                        })
+                    )
+                }
+            ).collect::<Vec<_>>()[..]
+        );
+
+        target.finish().unwrap();
 
         for ev in display.poll_events() {
             match ev {
