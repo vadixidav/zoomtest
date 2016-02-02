@@ -151,7 +151,7 @@ fn main() {
     unsafe impl Sync for SphereBall {}
     unsafe impl Send for SphereBall {}
     let mut rng = rand::Isaac64Rng::from_seed(&[1, 3, 3, 4]);
-    let mut sballs = (0..1000).map(|i| SphereBall{
+    let mut sballs = (0..1200).map(|i| SphereBall{
         color: [
             (i as f32 * 0.134).sin()*0.8 + 0.2,
             (i as f32 * 0.17).sin()*0.8 + 0.2,
@@ -204,7 +204,7 @@ fn main() {
                 gg::Node{position: {
                     let Vec3{x, y, z} = n.ball.position();
                     [x as f32, y as f32, z as f32]
-                }, color: n.color, falloff: 0.25}
+                }, color: n.color, falloff: 0.15}
             ).collect::<Vec<_>>()[..]);
 
         for ev in display.poll_events() {
@@ -240,22 +240,22 @@ fn main() {
         }
 
         if upstate == glium::glutin::ElementState::Pressed {
-            movement.append_translation_mut(&na::Vec3::new(0.0, -0.1, 0.0));
+            movement.append_translation_mut(&na::Vec3::new(0.0, -0.2, 0.0));
         }
         if dnstate == glium::glutin::ElementState::Pressed {
-            movement.append_translation_mut(&na::Vec3::new(0.0, 0.1, 0.0));
+            movement.append_translation_mut(&na::Vec3::new(0.0, 0.2, 0.0));
         }
         if ltstate == glium::glutin::ElementState::Pressed {
-            movement.append_translation_mut(&na::Vec3::new(-0.1, 0.0, 0.0));
+            movement.append_translation_mut(&na::Vec3::new(-0.2, 0.0, 0.0));
         }
         if rtstate == glium::glutin::ElementState::Pressed {
-            movement.append_translation_mut(&na::Vec3::new(0.1, 0.0, 0.0));
+            movement.append_translation_mut(&na::Vec3::new(0.2, 0.0, 0.0));
         }
         if fdstate == glium::glutin::ElementState::Pressed {
-            movement.append_translation_mut(&na::Vec3::new(0.0, 0.0, -0.1));
+            movement.append_translation_mut(&na::Vec3::new(0.0, 0.0, -0.2));
         }
         if bkstate == glium::glutin::ElementState::Pressed {
-            movement.append_translation_mut(&na::Vec3::new(0.0, 0.0, 0.1));
+            movement.append_translation_mut(&na::Vec3::new(0.0, 0.0, 0.2));
         }
     }
 }

@@ -6,9 +6,9 @@ authors = ["Geordon Worley <vadixidav@gmail.com>"]
 [dependencies]
 num = "*"
 nalgebra = "*"
-rand = "*"
-itertools = "*"
-crossbeam = "*"
+rand = "0.3.13"
+itertools = "0.4.7"
+crossbeam = "0.2.4"
 zoom = "1.1.0"
 glium = "0.13.3"
 glowygraph = "0.2.1"
