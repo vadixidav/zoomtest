@@ -153,7 +153,7 @@ fn main() {
     unsafe impl Sync for SphereBall {}
     unsafe impl Send for SphereBall {}
     let mut rng = rand::Isaac64Rng::from_seed(&[1, 3, 3, 4]);
-    let mut sballs = (0..1000).map(|i| SphereBall{
+    let mut sballs = (0..2000).map(|i| SphereBall{
         color: [
             (i as f32 * 0.134).sin()*0.8 + 0.2,
             (i as f32 * 0.17).sin()*0.8 + 0.2,
@@ -204,19 +204,6 @@ fn main() {
 
         let mut target = display.draw();
         target.clear_color(0.0, 0.0, 0.0, 1.0);
-
-        //Render nodes
-        glowy.render_nodes(&mut target, movement.to_homogeneous().as_ref(), &perspective,
-            &sballs.iter().map(|n|
-                gg::Node{
-                    position: {
-                        let Vec3{x, y, z} = n.ball.position();
-                        [x as f32, y as f32, z as f32]
-                    },
-                    color: n.color,
-                    falloff: 0.15,
-                }
-            ).collect::<Vec<_>>()[..]);
 
         //Render edges
         glowy.render_edges(
