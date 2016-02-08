@@ -153,7 +153,7 @@ fn main() {
     unsafe impl Sync for SphereBall {}
     unsafe impl Send for SphereBall {}
     let mut rng = rand::Isaac64Rng::from_seed(&[1, 3, 3, 4]);
-    let mut sballs = (0..2000).map(|i| SphereBall{
+    let mut sballs = (0..10000).map(|i| SphereBall{
         color: [
             (i as f32 * 0.134).sin()*0.8 + 0.2,
             (i as f32 * 0.17).sin()*0.8 + 0.2,
@@ -164,8 +164,28 @@ fn main() {
     }).collect::<Vec<_>>();
 
     let thread_total = 4;
-    let helix_order = 7;
+    let helix_order = 8;
     let len = sballs.len();
+
+    struct TheCenter (());
+
+    impl Position<Vec3> for TheCenter {
+        fn position(&self) -> Vec3 {
+            Vec3::new(0.0, 0.0, 0.0)
+        }
+    }
+
+    impl Quanta<f64> for TheCenter {
+        fn quanta(&self) -> f64 {
+            1.0
+        }
+    }
+
+    impl Ball<f64> for TheCenter {
+        fn radius(&self) -> f64 {
+            1.0
+        }
+    }
 
     loop {
         crossbeam::scope(|scope| {
@@ -179,15 +199,19 @@ fn main() {
                             &sballs[((i + len + 1) % len)].ball, 2.0);
                         SpringPhysics::hooke_to::<SpringPhysics>(&sballs[i].ball,
                             &sballs[((i + len + len/helix_order) % len)].ball, 2.0);
+                        GravityPhysics::gravitate_radius_to::<GravityPhysics>(&sballs[i].ball,
+                            &sballs[((i + len + len/helix_order) % len)].ball, -10.0);
+                        GravityPhysics::gravitate_radius_to(&sballs[i].ball,
+                            &TheCenter(()), -100000.0);
 
-                        for j in 0..len {
+                        /*for j in 0..len {
                             if i != j {
                                 GravityPhysics::gravitate_radius_to::<GravityPhysics>(&sballs[i].ball,
                                     &sballs[j].ball, -10.0);
                                 LorentzPhysics::lorentz_radius_to::<LorentzPhysics>(&sballs[i].ball,
                                     &sballs[j].ball, 0.05);
                             }
-                        }
+                        }*/
                     }
                 })
             }).collect::<Vec<_>>();
@@ -199,7 +223,7 @@ fn main() {
 
         for sball in sballs.iter_mut() {
             GravityPhysics::drag(&mut sball.ball, 30000.0);
-            sball.ball.advance(0.5);
+            sball.ball.advance(2.0);
         }
 
         let mut target = display.draw();
