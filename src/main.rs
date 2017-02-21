@@ -8,11 +8,11 @@ extern crate glium;
 
 use rand::{SeedableRng, Rng};
 use zoom::*;
-use num::{Zero, Float};
+use num::Zero;
 
 use na::{ToHomogeneous, Translation, Rotation};
 
-type Vec3 = na::Vec3<f64>;
+type Vec3 = vector::Cartesian3<f64>;
 
 trait LorentzPhysics: Particle<Vec3, f64> + Inertia<f64> {
     fn quanta(&self) -> f64;

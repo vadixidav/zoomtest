@@ -4,8 +4,8 @@ version = "2.2.0"
 authors = ["Geordon Worley <vadixidav@gmail.com>"]
 
 [dependencies]
-num = "*"
-nalgebra = "*"
+num = "0.1.30"
+nalgebra = "0.5.1"
 rand = "0.3.13"
 itertools = "0.4.7"
 crossbeam = "0.2.4"
